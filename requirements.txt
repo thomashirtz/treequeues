@@ -1,0 +1,5 @@
+dm-tree
+arrayqueues
+matplotlib
+scipy
+numpy
