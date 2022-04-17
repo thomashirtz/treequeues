@@ -38,7 +38,7 @@ class NestedArray(NamedTuple):
     item_3: np.ndarray
 
     
-def get_nested_array():
+def generate_nested_array() -> NestedArray:
     return NestedArray(
         item_1=np.random.random((4, )),
         item_2=np.random.random((1, )),
@@ -47,11 +47,11 @@ def get_nested_array():
     
 
 if __name__ == "__main__":
-    nested_array = get_nested_array()
+    nested_array = generate_nested_array()
     # Initialize queue with the nested array 'nested_array' and with maximum 10 items
     queue = TreeQueue(nested_array=nested_array, maxsize=10)
     
-    new_nested_array = get_nested_array()
+    new_nested_array = generate_nested_array()
     queue.put(new_nested_array)
     
     process = ReadProcess(queue=queue)
