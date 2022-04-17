@@ -48,7 +48,8 @@ def generate_nested_array() -> NestedArray:
 
 if __name__ == "__main__":
     nested_array = generate_nested_array()
-    # Initialize queue with the nested array 'nested_array' and with maximum 10 items
+    # Initialize queue with the 'nested_array' structure, shape and dtype. 
+    # This queue preallocate the space for 10 nested array with the same specification in a shared memory.
     queue = TreeQueue(nested_array=nested_array, maxsize=10)
     
     new_nested_array = generate_nested_array()
