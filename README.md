@@ -4,6 +4,13 @@ This package contains queues for transferring arrays and nested arrays between p
 pytree and `multiprocessing.Array`s. Compared to the vanilla `multiprocessing.Queue`, this implementation
 can reach speeds up to 10 times higher depending on the tree shape and size as well as the number of processes involved.
 
+By using numpy array buffered with multiprocessing array, the data can be send without the need for pickling.  
+One of the drawback is that the total size (size of the nested array time the maxsize of the queue) needs to be 
+preallocated.
+
+This package contains `TreeQueue` and `ArrayQueue`, in both case, an instance of the data and the maximum size needs to be passed when creating the queue.
+
+This repository was inspired by [ArrayQueues](https://github.com/portugueslab/arrayqueues) from [portugueslab](https://github.com/portugueslab).
 
 ## Performance benchmark
 
