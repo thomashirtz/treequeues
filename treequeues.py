@@ -119,7 +119,7 @@ class ArrayQueue(AbstractQueue):
         return self._array_view.get(index=index)
 
 
-class TreeQueue(AbstractQueue): # rename legacy, simple, original
+class SimpleTreeQueue(AbstractQueue): # rename legacy, simple, original
     """TreeQueue implemented with simple locking techniques."""
     def __init__(self, nested_array: NestedArray, maxsize: int):
         super().__init__(maxsize=maxsize)
@@ -157,3 +157,106 @@ class TreeQueue(AbstractQueue): # rename legacy, simple, original
                 lambda queue: queue._get(index=index),  # noqa
                 self._nested_queue
             )
+
+
+class TreeQueue(AbstractQueue):
+    """TreeQueue implemented with techniques allowing it to be more efficient when using many
+    simultaneous processes and threads.
+    """
+    def __init__(self, nested_array: NestedArray, maxsize: int):
+        super().__init__(maxsize=maxsize)
+
+        self._get_lock = mp.Lock()
+        self._put_lock = mp.Lock()
+        self._condition = mp.Condition()
+        self._next_index = mp.Value('i', 0)
+
+        self._manager = mp.Manager()
+        self._active_get_index_dict = self._manager.dict()
+        self._active_put_index_dict = self._manager.dict()
+
+        self._nested_queue = tree.map_structure(
+            lambda array: ArrayQueue(array=array, maxsize=maxsize), nested_array
+        )
+
+        self._nested_array = nested_array
+        self.nbytes = sum([q.nbytes for q in tree.flatten(self._nested_queue)])
+
+    def put(self, nested_array: NestedArray, block=True, timeout=None) -> None:
+        with self._put_lock:
+            index = self._next_index.value
+            self._next_index.value = (index + 1) % self.maxsize
+            self.wait_and_add(index, self._active_put_index_dict, self._condition)
+
+        while index in self._active_get_index_dict.keys():
+            with self._condition:
+                self._condition.wait()
+
+        tree.map_structure(
+            lambda queue, array: queue._put(  # noqa
+                array=array,
+                index=index
+            ),
+            self._nested_queue, nested_array
+        )
+
+        # put only in queue the index after being sure that the nested_array is written in the nested queue
+        self._queue.put(index, block=block, timeout=timeout)
+        del self._active_put_index_dict[index]
+        with self._condition:
+            self._condition.notify_all()
+
+    def get(self, block: bool = True, timeout: Optional[float] = None) -> NestedArray:
+        with self._get_lock:
+            index = self._queue.get(block=block, timeout=timeout)
+            # The index in the queue are always index of element that are finished to be transferred,
+            # we therefore don't need to enquiry if the index is in the put dict.
+            self.wait_and_add(index, self._active_get_index_dict, self._condition)
+
+        nested_array = tree.map_structure(
+            lambda queue: queue._get(index=index),  # noqa
+            self._nested_queue
+        )
+
+        del self._active_get_index_dict[index]
+        with self._condition:
+            self._condition.notify_all()
+        return nested_array
+
+    @staticmethod
+    def wait_and_add(
+            index: int,
+            dictionary: Dict[int, bool],
+            condition: multiprocessing.Condition,
+    ) -> None:
+        """ The following code make will acquire lock, test if it is in the get dictionary, then,
+        it'll either add it if it is not, else will wait for the next notify.
+
+        This is an equivalent to multiprocessing.Condition().wait_for() except that the lock is held
+        to do an action, in that case adding an entry to the dictionary.
+
+        References for the code:
+        Acquire lock inside a try-finally block:
+        https://stackoverflow.com/a/14137638
+        While loop with condition until predicate is met (and snippet condition with-wait):
+        https://stackoverflow.com/a/23116848
+        Equivalent while True and while loop:
+        https://stackoverflow.com/a/27512815
+        multiprocessing.Condition().wait_for():
+        https://docs.python.org/3/library/threading.html#threading.Condition.wait_for
+
+        Args:
+            index: index that will be tested for its presence in the dict before being added
+            dictionary: multiprocessing dict
+            condition: multiprocessing condition
+        """
+
+        while True:
+            condition.acquire()
+            try:
+                if index not in dictionary.keys():
+                    dictionary[index] = True
+                    break
+                condition.wait()
+            finally:
+                condition.release()
