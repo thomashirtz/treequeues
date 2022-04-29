@@ -15,6 +15,7 @@ This repository was inspired by [ArrayQueues](https://github.com/portugueslab/ar
 ## Performance benchmark
 
 ![](benchmark_performance.png)
+![](benchmark_multiprocessing.png)
 
 ## Installation
 ```
