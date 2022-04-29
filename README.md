@@ -30,7 +30,7 @@ This repository was inspired by [ArrayQueues](https://github.com/portugueslab/ar
 pip install git+https://github.com/thomashirtz/treequeues#egg=treequeues
 ```
 
-# Usage example
+## Usage example
 ```python
 import numpy as np
 from typing import NamedTuple
