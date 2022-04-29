@@ -69,15 +69,12 @@ class AbstractQueue(ABC):
     def get(self, block: bool = True, timeout: Optional[float] = None) -> T:
         raise NotImplementedError
 
-    @abstractmethod
     def empty(self) -> bool:
         return self._queue.empty()
 
-    @abstractmethod
     def full(self) -> bool:
         return self._queue.full()
 
-    @abstractmethod
     def qsize(self) -> int:
         return self._queue.qsize()
 
