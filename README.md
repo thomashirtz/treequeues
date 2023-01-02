@@ -12,17 +12,25 @@ This package contains `TreeQueue` and `ArrayQueue`, in both case, an instance of
 
 This repository was inspired by [ArrayQueues](https://github.com/portugueslab/arrayqueues) from [portugueslab](https://github.com/portugueslab).
 
-## Performance benchmark
+### Raw performance
 
-![](benchmark_performance.png)
-![](benchmark_multiprocessing.png)
+<p align="center">
+    <img align="centre" width="1000"  src="benchmark_performance.png">
+</p>
+
+### Multiprocessing performance
+
+<p align="center">
+    <img align="center" width="600"  src="benchmark_multiprocessing.png">
+</p>
+
 
 ## Installation
 ```
 pip install git+https://github.com/thomashirtz/treequeues#egg=treequeues
 ```
 
-# Usage example
+## Usage example
 ```python
 import numpy as np
 from typing import NamedTuple
