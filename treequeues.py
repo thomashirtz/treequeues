@@ -116,7 +116,7 @@ class ArrayQueue(AbstractQueue):
         return self._array_view.get(index=index)
 
 
-class SimpleTreeQueue(AbstractQueue): # rename legacy, simple, original
+class SimpleTreeQueue(AbstractQueue):
     """TreeQueue implemented with simple locking techniques."""
     def __init__(self, nested_array: NestedArray, maxsize: int):
         super().__init__(maxsize=maxsize)
